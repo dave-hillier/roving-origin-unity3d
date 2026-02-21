@@ -1,5 +1,4 @@
-﻿using UnityEngine;
-using System.Collections;
+using UnityEngine;
 
 public class TestMapping : MonoBehaviour {
 
@@ -8,22 +7,25 @@ public class TestMapping : MonoBehaviour {
 	public Vector3g FetchedGlobalPosition;
 	public string CurrentGlobalPosition;
 	public string GlobalFromTransform;
-	public bool Move;
+	public bool Move = true;
 
-	// Use this for initialization
 	void Start () {
 		Debug.Log ("Test mapping cube start");
 	}
-	
-	// Update is called once per frame
+
 	void Update () {
+		if (Move) {
+			MyGlobalPosition.x = StartPosition.x + (decimal)Mathf.Sin ((float)StartPosition.z * Time.fixedTime / 5.0f) * 2.5M;
+			MyGlobalPosition.z = StartPosition.z + (decimal)Mathf.Cos ((float)StartPosition.z * Time.fixedTime / 5.0f) * 2.5M;
+			gameObject.transform.position = MyGlobalPosition;
+		}
 
-		MyGlobalPosition.x = StartPosition.x + (decimal)Mathf.Sin ((float)StartPosition.z*Time.fixedTime/5.0f) * 2.5M;
-		MyGlobalPosition.z = StartPosition.z + (decimal)Mathf.Cos ((float)StartPosition.z*Time.fixedTime/5.0f) * 2.5M;
-
-		gameObject.transform.position = MyGlobalPosition; // TODO: something more sensible? 
+		// Verify round-trip: convert the transform's local position back to global coordinates.
+		// Comparing CurrentGlobalPosition and GlobalFromTransform in the inspector shows
+		// whether precision is being maintained through the conversion pipeline.
+		FetchedGlobalPosition = Vector3g.FromLocalVector3(gameObject.transform.position);
 
 		CurrentGlobalPosition = MyGlobalPosition.ToString ();
-		GlobalFromTransform = gameObject.transform.position.ToString();
+		GlobalFromTransform = FetchedGlobalPosition.ToString();
 	}
 }
