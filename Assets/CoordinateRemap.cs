@@ -1,6 +1,5 @@
-﻿using UnityEngine;
-using System.Collections;
-
+using UnityEngine;
+using System.Collections.Generic;
 
 public class CoordinateRemap : MonoBehaviour {
 
@@ -11,7 +10,6 @@ public class CoordinateRemap : MonoBehaviour {
 	public GameObject StaticObject;
 	public GameObject PositionedObject;
 
-	// Use this for initialization
 	void Start () {
 		Debug.Log ("Coord holder start");
 		int size = 100;
@@ -34,32 +32,30 @@ public class CoordinateRemap : MonoBehaviour {
 			i += 10;
 		}
 	}
-	
-	// Update is called once per frame
+
 	void Update () {
 
-		if (!DesiredLocalOrigin.Equals(LocalOrigin)) {
-			// Translate all entities
+		if (DesiredLocalOrigin != LocalOrigin) {
 			var sw = new System.Diagnostics.Stopwatch();
-			var allObjects = GameObject.FindObjectsOfType<GameObject>();
+			var offset = (DesiredLocalOrigin - LocalOrigin).ToVector3();
 
-			var offset = new Vector3((float)(DesiredLocalOrigin.x - LocalOrigin.x),
-			                         (float)(DesiredLocalOrigin.y - LocalOrigin.y),
-			                         (float)(DesiredLocalOrigin.z - LocalOrigin.z));
+			var allTransforms = FindObjectsOfType<Transform>();
+			int rootCount = 0;
 
-			Debug.Log ("Translate all " + allObjects.Length + " by " + offset);
 			sw.Start();
-			foreach(var obj in allObjects)
+			foreach (var t in allTransforms)
 			{
+				// Only translate root objects — children follow their parents automatically.
+				// This avoids the double-translation bug where child transforms would be
+				// moved both by their parent shifting and by the explicit offset.
+				if (t.parent != null)
+					continue;
 
-				obj.transform.position += offset;// TODO: parenting?
-				if (obj.name.Contains("Cam"))
-				{
-					Debug.Log ("Translating: " + obj.name + " to " + obj.transform.position); 
-				}
+				t.position += offset;
+				rootCount++;
 			}
 			sw.Stop();
-			Debug.Log("Elapsed " + sw.Elapsed.TotalSeconds);
+			Debug.Log("Translated " + rootCount + " root objects in " + sw.Elapsed.TotalSeconds + "s");
 			LocalOrigin = DesiredLocalOrigin;
 		}
 	}
